@@ -1,5 +1,5 @@
 """Point-in-time robust regression module for calculating hedge ratios and residuals."""
-
+import numpy as np
 import logging
 from typing import Dict, Optional
 
@@ -173,3 +173,61 @@ def pit_robust_betas(
         "df_hedge_rets": df_hedge_rets,
         "df_asset_resids": df_asset_resids,
     }
+
+def backtest(df_rets, market_residuals, market_returns, etf_assortment, rf_daily = None, signal_window = 1, vol_window = 20, vol_scale = False, plot_true = True,
+              exponential_weights = True, sector_neutral = True, percentile = True, market_hedged = False, beta_window = 60, weights_clip = False, max_weight = 0.05
+              , beta_hedge = False, lag = 1, rolling_window = True, rolling_window_size = 3, corr= True, market_1 = True):
+    
+    sector_resid = market_residuals
+    if vol_scale:
+        vol = sector_resid.rolling(vol_window).std().dropna()
+        scaled_sector_resid = sector_resid / (vol + 1e-6)
+        cumulative_resid = (1+scaled_sector_resid).rolling(window=signal_window).apply(np.prod, raw=True) - 1 
+        daily_reverse_signal = - cumulative_resid
+    else:
+        cumulative_resid = (1+sector_resid).rolling(window=signal_window).apply(np.prod, raw=True) - 1 
+        daily_reverse_signal = - cumulative_resid
+    
+    z_scores_group = daily_reverse_signal.sub(cumulative_resid.mean(axis=1), axis = 0).div(cumulative_resid.std(axis=1), axis = 0)
+    if sector_neutral:
+        for etfs in etf_assortment:
+            z = z_scores_group[etfs]
+            z_sector_adj = z.sub(z.mean(axis=1), axis=0)
+            z_scores_group[etfs] = z_sector_adj
+        z_all = z_scores_group
+    else:
+        z_all = z_scores_group
+    if not percentile:
+        z_scores = (z_all.sub(z_all.mean(axis=1), axis  = 0).div(z_all.std(axis=1), axis = 0))
+        long_signals = z_scores.clip(lower=0)
+        short_signals = z_scores.clip(upper=0)
+        
+        long_weights = long_signals.div(long_signals.sum(axis=1), axis=0).fillna(0) * 1/2
+        short_weights = short_signals.div(short_signals.abs().sum(axis=1), axis=0).fillna(0) * 1/2
+        weights = long_weights + short_weights
+        if exponential_weights:
+            weights = weights.ewm(span=10, adjust=False).mean()
+
+            long_weights = weights.clip(lower=0)
+            short_weights = weights.clip(upper=0)
+
+            long_weights = long_weights.div(long_weights.sum(axis=1), axis=0).fillna(0) * 1/2
+            short_weights = short_weights.div(short_weights.abs().sum(axis=1), axis=0).fillna(0) * 1/2
+
+            weights = long_weights + short_weights
+    else:
+        z_scores = (z_all.sub(z_all.mean(axis=1), axis=0)
+                  .div(z_all.std(axis=1), axis=0))
+
+        quantile = 0.1
+        top_mask = z_scores.ge(z_scores.quantile(1 - quantile, axis=1), axis=0)
+        bottom_mask = z_scores.le(z_scores.quantile(quantile, axis=1), axis=0)
+
+        long_signals = z_scores.where(top_mask, 0)
+        short_signals = z_scores.where(bottom_mask, 0)
+        long_weights = long_signals.div(long_signals.sum(axis=1), axis=0).fillna(0) * 1/2
+        short_weights = short_signals.div(short_signals.abs().sum(axis=1), axis=0).fillna(0) * 1/2
+
+        weights = long_weights + short_weights
+
+    return weights
