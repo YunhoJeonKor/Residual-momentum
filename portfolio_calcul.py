@@ -1,10 +1,18 @@
-from vbase_utils.stats.pit_robust_betas import pit_robust_betas, backtest
+from vbase_utils.stats.pit_robust_betas import pit_robust_betas,  backtest
 import pandas as pd
 import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta, date
 # import pandas_market_calendars as mcal
 import logging
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+# sys.path.append(os.path.abspath(os.path.join(os.getcwd(),'..'))
+# print(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+# print(os.getcwd())
+# print(os.path.dirname(__file__))
+
 def produce_portfolio(portfolio_date: str, logger: object) -> pd.DataFrame:
     """
     Produces an ETF portfolio based on residuals from a factor model using pit_robust_betas.
@@ -73,22 +81,22 @@ def produce_portfolio(portfolio_date: str, logger: object) -> pd.DataFrame:
     
     logger.info("Running backtest with residuals...")
     
-    position_df =  backtest(df_rets, market_residuals,market_returns, etf_assortment,
-        signal_window = 1, vol_window = 20, vol_scale = False, plot_true = True, sector_neutral= True, exponential_weights= True, percentile = False, market_hedged = False,
-            beta_window= 40, beta_hedge=False, rolling_window = False, rolling_window_size=4).iloc[-1].reset_index()
+    position_df = backtest(df_rets, market_residuals,market_returns, etf_assortment,
+         signal_window = 1, vol_window = 20, vol_scale = True, plot_true = True, sector_neutral= True, exponential_weights= True, percentile = False, market_hedged = False,
+          beta_window= 40, beta_hedge=False, rolling_window = False, rolling_window_size=4, beta_neutralize= True).iloc[-1].reset_index()
     position_df.columns = ["sym",'wt']
 
     logger.info(f"Generated portfolio with HEAD 5:\n{position_df.head(5)}")
     return position_df
 
 
-# logger = logging.getLogger("portfolio_logger")
-# logger.setLevel(logging.INFO)
-# if not logger.handlers:
-#     handler = logging.StreamHandler()
-#     handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-#     logger.addHandler(handler)
+logger = logging.getLogger("portfolio_logger")
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(handler)
 
-# today_str = date.today().strftime("%Y-%m-%d")
+today_str = date.today().strftime("%Y-%m-%d")
 
-# produce_portfolio(today_str, logger)
+produce_portfolio(today_str, logger)
