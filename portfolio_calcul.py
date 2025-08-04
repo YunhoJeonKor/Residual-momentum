@@ -8,7 +8,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from vbase_utils.stats.pit_robust_betas import pit_robust_betas,  backtest
+from vbase_utils.stats.pit_robust_betas import pit_robust_betas
 from helper import backtest
 
 # sys.path.append(os.path.abspath(os.path.join(os.getcwd(),'..'))
