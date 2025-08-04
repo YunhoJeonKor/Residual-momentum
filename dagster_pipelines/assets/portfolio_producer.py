@@ -92,14 +92,15 @@ def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.D
     logger.info(f"Generated portfolio with HEAD:\n{position_df}")
     return position_df
 
+# This is sample_code.
 
-logger = logging.getLogger("portfolio_logger")
-logger.setLevel(logging.INFO)
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    logger.addHandler(handler)
+# logger = logging.getLogger("portfolio_logger")
+# logger.setLevel(logging.INFO)
+# if not logger.handlers:
+#     handler = logging.StreamHandler()
+#     handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+#     logger.addHandler(handler)
 
-today_str = date.today().strftime("%Y-%m-%d")
-#if you want to make beta 0, beta0 = True, otherwise beta0 = False
-produce_portfolio(today_str, logger, beta0 = True) 
+# today_str = date.today().strftime("%Y-%m-%d")
+# #if you want to make beta 0, beta0 = True, otherwise beta0 = False
+# produce_portfolio(today_str, logger, beta0 = True) 
