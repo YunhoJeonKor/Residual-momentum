@@ -1,4 +1,3 @@
-from vbase_utils.stats.pit_robust_betas import pit_robust_betas,  backtest
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -8,12 +7,16 @@ import logging
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
+from vbase_utils.stats.pit_robust_betas import pit_robust_betas,  backtest
+from helper import backtest
+
 # sys.path.append(os.path.abspath(os.path.join(os.getcwd(),'..'))
 # print(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 # print(os.getcwd())
 # print(os.path.dirname(__file__))
 
-def produce_portfolio(portfolio_date: str, logger: object) -> pd.DataFrame:
+def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.DataFrame:
     """
     Produces an ETF portfolio based on residuals from a factor model using pit_robust_betas.
 
@@ -83,10 +86,10 @@ def produce_portfolio(portfolio_date: str, logger: object) -> pd.DataFrame:
     
     position_df = backtest(df_rets, market_residuals,market_returns, etf_assortment,
          signal_window = 1, vol_window = 20, vol_scale = True, plot_true = True, sector_neutral= True, exponential_weights= True, percentile = False, market_hedged = False,
-          beta_window= 40, beta_hedge=False, rolling_window = False, rolling_window_size=4, beta_neutralize= True).iloc[-1].reset_index()
+          beta_window= 40, beta_hedge=False, rolling_window = False, rolling_window_size=4, beta_neutralize= True, beta_0 = beta0).iloc[-1].reset_index()
     position_df.columns = ["sym",'wt']
 
-    logger.info(f"Generated portfolio with HEAD 5:\n{position_df.head(5)}")
+    logger.info(f"Generated portfolio with HEAD:\n{position_df}")
     return position_df
 
 
@@ -98,5 +101,5 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 today_str = date.today().strftime("%Y-%m-%d")
-
-produce_portfolio(today_str, logger)
+#if you want to make beta 0, beta0 = True, otherwise beta0 = False
+produce_portfolio(today_str, logger, beta0 = True) 
