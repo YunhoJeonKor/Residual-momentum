@@ -1,0 +1,12 @@
+# Config
+.env*
+
+# Py ignored files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Dagster
+.tmp_dagster_*/
