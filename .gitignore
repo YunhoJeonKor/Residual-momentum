@@ -7,6 +7,8 @@ __pycache__/
 *.pyo
 *.pyd
 venv/
-
+.venv/
 # Dagster
 .tmp_dagster_*/
+# macOS system files
+.DS_Store

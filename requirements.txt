@@ -1,1 +1,2 @@
 git+https://github.com/validityBase/vbase-py-utils.git
+scipy<1.11
