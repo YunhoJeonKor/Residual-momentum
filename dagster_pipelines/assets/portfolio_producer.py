@@ -1,22 +1,23 @@
-import pandas as pd
-import numpy as np
-import yfinance as yf
-from datetime import datetime, timedelta, date
 # import pandas_market_calendars as mcal
 import logging
 import os
 import sys
+from datetime import date, datetime, timedelta
+
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from vbase_utils.stats.pit_robust_betas import pit_robust_betas
 from helper import backtest
+from vbase_utils.stats.pit_robust_betas import pit_robust_betas
 
 # sys.path.append(os.path.abspath(os.path.join(os.getcwd(),'..'))
 # print(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-# print(os.getcwd())
-# print(os.path.dirname(__file__))
 
-def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.DataFrame:
+
+def produce_portfolio(portfolio_date: str, logger: object, beta0=True) -> pd.DataFrame:
     """
     Produces an ETF portfolio based on residuals from a factor model using pit_robust_betas.
 
@@ -34,11 +35,108 @@ def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.D
     Raises:
         ValueError: If the data download fails or contains no price information.
     """
-    tickers = ['IWV','RPV','VOE','VBR','IWD','IWS','IWN','IWX','IUSV','DTH','FDL','EFV','FTA','DON','PID','PFM','PXF','PWV','RPG','VUG','VBK','IVW','IWO','IWP','IUSG','SCHG','SPYG','EPS','FAD','FTC',
-    'FTCS','VYM','SDY','DHS','DVY','PEY','FVD','DEW','IJS','PRFZ','RZV','RZG','FYX','DFE','DLS','DWX','VOT','MDYV','MDYG','IJK','IJT','FNX','RWK','RFG','RFV','SPHQ','IWF','DLN','DTD','FEX']
-    etf_assortment = [['RPV','VOE','VBR','IWD','IWS','IWN','IWX','IUSV','DTH','EFV','FDL','FTA','DON','PID','PFM','PXF','PWV'],
-    ['RPG','VUG','VBK','IVW','IWO','IWP','IUSG','SCHG','SPYG','EPS','FAD','FTC','FTCS'],['VYM', 'SDY', 'DHS', 'DVY', 'PEY', 'FVD', 'DEW'],['IJS', 'PRFZ', 'RZV', 'RZG', 'FYX', 'DFE', 'DLS', 'DWX'],
-    ['VOT', 'MDYV', 'MDYG', 'IJK', 'IJT', 'FNX', 'RWK', 'RFG', 'RFV'],['SPHQ', 'IWF', 'DLN', 'DTD', 'FEX']]
+    tickers = [
+        "IWV",
+        "RPV",
+        "VOE",
+        "VBR",
+        "IWD",
+        "IWS",
+        "IWN",
+        "IWX",
+        "IUSV",
+        "DTH",
+        "FDL",
+        "EFV",
+        "FTA",
+        "DON",
+        "PID",
+        "PFM",
+        "PXF",
+        "PWV",
+        "RPG",
+        "VUG",
+        "VBK",
+        "IVW",
+        "IWO",
+        "IWP",
+        "IUSG",
+        "SCHG",
+        "SPYG",
+        "EPS",
+        "FAD",
+        "FTC",
+        "FTCS",
+        "VYM",
+        "SDY",
+        "DHS",
+        "DVY",
+        "PEY",
+        "FVD",
+        "DEW",
+        "IJS",
+        "PRFZ",
+        "RZV",
+        "RZG",
+        "FYX",
+        "DFE",
+        "DLS",
+        "DWX",
+        "VOT",
+        "MDYV",
+        "MDYG",
+        "IJK",
+        "IJT",
+        "FNX",
+        "RWK",
+        "RFG",
+        "RFV",
+        "SPHQ",
+        "IWF",
+        "DLN",
+        "DTD",
+        "FEX",
+    ]
+    etf_assortment = [
+        [
+            "RPV",
+            "VOE",
+            "VBR",
+            "IWD",
+            "IWS",
+            "IWN",
+            "IWX",
+            "IUSV",
+            "DTH",
+            "EFV",
+            "FDL",
+            "FTA",
+            "DON",
+            "PID",
+            "PFM",
+            "PXF",
+            "PWV",
+        ],
+        [
+            "RPG",
+            "VUG",
+            "VBK",
+            "IVW",
+            "IWO",
+            "IWP",
+            "IUSG",
+            "SCHG",
+            "SPYG",
+            "EPS",
+            "FAD",
+            "FTC",
+            "FTCS",
+        ],
+        ["VYM", "SDY", "DHS", "DVY", "PEY", "FVD", "DEW"],
+        ["IJS", "PRFZ", "RZV", "RZG", "FYX", "DFE", "DLS", "DWX"],
+        ["VOT", "MDYV", "MDYG", "IJK", "IJT", "FNX", "RWK", "RFG", "RFV"],
+        ["SPHQ", "IWF", "DLN", "DTD", "FEX"],
+    ]
 
     portfolio_datetime = datetime.strptime(portfolio_date, "%Y-%m-%d")
     current_datetime = datetime.now()
@@ -50,16 +148,21 @@ def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.D
 
     logger.info(f"Fetching price data from {start_date.date()} to {end_date.date()}...")
 
-
-    df = yf.download(tickers, start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
+    df = yf.download(
+        tickers,
+        start=start_date.strftime("%Y-%m-%d"),
+        end=end_date.strftime("%Y-%m-%d"),
+    )
     if df.empty:
         logger.error("Downloaded price data is empty.")
         raise ValueError("No price data retrieved from Yahoo Finance.")
 
-    returns = df['Close'].pct_change()
+    returns = df["Close"].pct_change()
     df_rets = returns.iloc[1:]
     df_rets.index = pd.to_datetime(df_rets.index, utc=True).tz_localize(None)
-    weekly_rebalance = pd.DatetimeIndex([dt for dt in df_rets.index if dt.weekday() == 4])
+    weekly_rebalance = pd.DatetimeIndex(
+        [dt for dt in df_rets.index if dt.weekday() == 4]
+    )
 
     if weekly_rebalance.empty:
         logger.warning("No Fridays found in return data for weekly rebalance.")
@@ -68,7 +171,6 @@ def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.D
     asset_returns = df_rets.drop("IWV", axis=1)
 
     logger.info("Calculating pit_robust_betas...")
-
 
     market_results = pit_robust_betas(
         df_asset_rets=asset_returns,
@@ -81,16 +183,38 @@ def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.D
         progress=True,
     )
     market_residuals = market_results["df_asset_resids"]
-    
+
     logger.info("Running backtest with residuals...")
-    
-    position_df = backtest(df_rets, market_residuals,market_returns, etf_assortment,
-         signal_window = 1, vol_window = 20, vol_scale = True, plot_true = True, sector_neutral= True, exponential_weights= True, percentile = False, market_hedged = False,
-          beta_window= 40, beta_hedge=False, rolling_window = False, rolling_window_size=4, beta_neutralize= True, beta_0 = beta0).iloc[-1].reset_index()
-    position_df.columns = ["sym",'wt']
+
+    position_df = (
+        backtest(
+            df_rets,
+            market_residuals,
+            market_returns,
+            etf_assortment,
+            signal_window=1,
+            vol_window=20,
+            vol_scale=True,
+            plot_true=True,
+            sector_neutral=True,
+            exponential_weights=True,
+            percentile=False,
+            market_hedged=False,
+            beta_window=40,
+            beta_hedge=False,
+            rolling_window=False,
+            rolling_window_size=4,
+            beta_neutralize=True,
+            beta_0=beta0,
+        )
+        .iloc[-1]
+        .reset_index()
+    )
+    position_df.columns = ["sym", "wt"]
 
     logger.info(f"Generated portfolio with HEAD:\n{position_df}")
     return position_df
+
 
 # This is sample_code.
 
@@ -103,4 +227,4 @@ def produce_portfolio(portfolio_date: str, logger: object, beta0 = True) -> pd.D
 
 # today_str = date.today().strftime("%Y-%m-%d")
 # #if you want to make beta 0, beta0 = True, otherwise beta0 = False
-# produce_portfolio(today_str, logger, beta0 = True) 
+# produce_portfolio(today_str, logger, beta0 = True)
